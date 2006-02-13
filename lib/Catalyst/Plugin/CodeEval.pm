@@ -4,9 +4,9 @@ use strict;
 use warnings;
 use PadWalker qw(peek_my);
 
-our $VERSION = '0.01';
+our $VERSION = '0.011';
 
-my($Revision) = '$Id: CodeEval.pm,v 1.3 2006/02/13 19:26:16 Sho Exp $';
+my($Revision) = '$Id: CodeEval.pm,v 1.5 2006/02/13 20:16:52 Sho Exp $';
 
 
 =head1 NAME
@@ -71,7 +71,7 @@ sub code_eval {
 	}
     }
 
-    $c->log->debug("++++ CodeEval : eval this code +++++\n".$CodeEval_valiable_code . $CodeEval_code_sourcecode);
+#    $c->log->debug("++++ CodeEval : eval this code +++++\n".$CodeEval_valiable_code . $CodeEval_code_sourcecode);
     eval($CodeEval_valiable_code . $CodeEval_code_sourcecode);
     if($@) {
 	$c->log->debug("+++++ CodeEval : execute error : \n$@");
