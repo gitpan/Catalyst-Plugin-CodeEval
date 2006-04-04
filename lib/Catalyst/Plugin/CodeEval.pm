@@ -4,9 +4,9 @@ use strict;
 use warnings;
 use PadWalker qw(peek_my);
 
-our $VERSION = '0.011';
+our $VERSION = '0.012';
 
-my($Revision) = '$Id: CodeEval.pm,v 1.5 2006/02/13 20:16:52 Sho Exp $';
+my($Revision) = '$Id: CodeEval.pm,v 1.6 2006/02/14 09:40:47 Sho Exp $';
 
 
 =head1 NAME
@@ -48,36 +48,37 @@ perl script file is executed by using eval.
 sub code_eval {
     my $c = shift;
     my $CodeEval_code_eval_file = shift;
-    my $CodeEval_uplevel_valiable = peek_my(1);
+    my $CodeEval_uplevel_variable = peek_my(1);
     my $CodeEval_code_sourcecode;
     eval {
 	$CodeEval_code_sourcecode = $c->read_code($CodeEval_code_eval_file);
     };
     if($@) {
 	$c->log->debug("+++++ CodeEval : load script file error : \n$@");
-	return;
+	return 1;
     }
 
-    my $CodeEval_valiable_code;
-    foreach my $key (grep($_ ne '$c', keys(%{$CodeEval_uplevel_valiable}))) {
+    my $CodeEval_variable_code;
+    foreach my $key (grep($_ ne '$c', keys(%{$CodeEval_uplevel_variable}))) {
 	if($key =~ /^\$/) {
-	    $CodeEval_valiable_code .= "my $key = \${\$CodeEval_uplevel_valiable->{'$key'}};\n";
+	    $CodeEval_variable_code .= "my $key = \${\$CodeEval_uplevel_variable->{'$key'}};\n";
 	} elsif($key =~ /^\@/) {
-	    $CodeEval_valiable_code .= "my $key = \@{\$CodeEval_uplevel_valiable->{'$key'}};\n";
+	    $CodeEval_variable_code .= "my $key = \@{\$CodeEval_uplevel_variable->{'$key'}};\n";
 	} elsif($key =~ /^\%/) {
-	    $CodeEval_valiable_code .= "my $key = \%{\$CodeEval_uplevel_valiable->{'$key'}};\n";
+	    $CodeEval_variable_code .= "my $key = \%{\$CodeEval_uplevel_variable->{'$key'}};\n";
 	} else {
-	    $CodeEval_valiable_code .= "my $key = \$CodeEval_uplevel_valiable->{'$key'};\n";
+	    $CodeEval_variable_code .= "my $key = \$CodeEval_uplevel_variable->{'$key'};\n";
 	}
     }
 
-#    $c->log->debug("++++ CodeEval : eval this code +++++\n".$CodeEval_valiable_code . $CodeEval_code_sourcecode);
-    eval($CodeEval_valiable_code . $CodeEval_code_sourcecode);
+#    $c->log->debug("++++ CodeEval : eval this code +++++\n".$CodeEval_variable_code . $CodeEval_code_sourcecode);
+    my $rt = eval($CodeEval_variable_code . $CodeEval_code_sourcecode);
     if($@) {
 	$c->log->debug("+++++ CodeEval : execute error : \n$@");
     } else {
-	$c->log->debug('+++++ CodeEval : execute end +++++');
+	$c->log->debug("+++++ CodeEval : execute end : return $rt +++++");
     }
+    return $rt;
 }
 
 =head2 read_code
@@ -94,7 +95,7 @@ sub read_code {
     $c->log->debug("+++++ CodeEval : load script file ($script_file) +++++");
 
     open(CODEFILE, $script_file) or die "can not open $script_file\n";
-    my $code = join("\n",<CODEFILE>);
+    my $code = join("",<CODEFILE>);
     close(CODEFILE);
     return $code
 }
